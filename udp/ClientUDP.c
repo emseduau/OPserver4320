@@ -1,3 +1,4 @@
+
 /*
 ** ClientUDP.c -- a datagram "client" demo
 */
@@ -25,8 +26,8 @@ int main(int argc, char *argv[])
 	int rv;
 	int numbytes;
 
-	if (argc != 3) {
-		fprintf(stderr,"usage: talker serverName portNumber\n");
+	if (argc <= 3) {
+		fprintf(stderr,"usage: talker serverName portNumber MessageBytes\n");
 		exit(1);
 	}
 	portNumber = getIntParam(2, argv);
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_DGRAM;
 
-        if ((rv = getaddrinfo(argv[1], portNumber, &hints, &servinfo)) != 0) {
+        if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) {
             fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
             return 1;
         }
@@ -54,11 +55,12 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "talker: failed to create socket\n");
 		return 2;
 	}
-
-	if ((numbytes = sendto(sockfd, argv[2], strlen(argv[2]), 0,
-			 p->ai_addr, p->ai_addrlen)) == -1) {
-		perror("talker: sendto");
-		exit(1);
+	int z;
+	for(z = 3; z < argc; z++){
+        if ((numbytes = sendto(sockfd, argv[z], strlen(argv[z]), 0, p->ai_addr, p->ai_addrlen)) == -1) {
+            perror("talker: sendto");
+            exit(1);
+        }
 	}
 	freeaddrinfo(servinfo);
 
@@ -68,6 +70,7 @@ int main(int argc, char *argv[])
 }
 
 int getIntParam(int loc, const char *argv[]){
+    printf("talker: getting int param");
     char *p;
     int num;
     int retInt = 0;
@@ -81,5 +84,6 @@ int getIntParam(int loc, const char *argv[]){
         {
             retInt = conver;
         }
+    printf("talker: got int param");
     return retInt;
 }
