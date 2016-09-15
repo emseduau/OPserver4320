@@ -1,5 +1,5 @@
 /*
-** talker.c -- a datagram "client" demo
+** ClientUDP.c -- a datagram "client" demo
 */
 
 #include <stdio.h>
