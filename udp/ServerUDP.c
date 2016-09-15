@@ -17,7 +17,7 @@
 #define MYPORT "10025"	// the port users will be connecting to
 
 #define MAXBUFLEN 100
-
+#define TENRADIX 10
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -82,13 +82,13 @@ int main(int argc, char *argv[])
 	freeaddrinfo(servinfo);
 	addr_len = sizeof their_addr;
 	buf[0] = 1;
-	while(buf[0] != 0){
+	while(buf[0] != '0'){
         printf("listener: waiting to recvfrom...\n");
         if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0, (struct sockaddr *)&their_addr, &addr_len)) == -1) {
             perror("recvfrom");
             exit(1);
         }
-        if(buf[0] != 0){
+        if(buf[0] != '0'){
             printf("listener: got packet from %s\n",
                 inet_ntop(their_addr.ss_family,
                 get_in_addr((struct sockaddr *)&their_addr),
@@ -111,7 +111,7 @@ int getIntParam(int loc, char *argv[]){
     int num;
     int retInt = 0;
     long conver = strtol(argv[loc], &p, TENRADIX);
-    if (errno != 0 || *p != '\0' || conv > INT_MAX)
+    if (errno != 0 || *p != '\0' || conver > INT_MAX)
         {
             perror("talker usage: talker serverName portNumber\n");
             exit(1);
@@ -122,8 +122,4 @@ int getIntParam(int loc, char *argv[]){
         }
     return retInt;
 }
-
-
-
-
 
