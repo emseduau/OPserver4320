@@ -12,29 +12,32 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <limits.h>  // for INT_MAX
 
 #define SERVERPORT "10010"	// the port users will be connecting to
-
+#define TENRADIX 10
 int main(int argc, char *argv[])
 {
 	int sockfd;
+	int userInputs[5];
+	int portNumber;
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	int numbytes;
 
 	if (argc != 3) {
-		fprintf(stderr,"usage: talker hostname message\n");
+		fprintf(stderr,"usage: talker serverName portNumber\n");
 		exit(1);
 	}
-
+	portNumber = getIntParam(2, argv);
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_DGRAM;
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_DGRAM;
 
-	if ((rv = getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-		return 1;
-	}
+        if ((rv = getaddrinfo(argv[1], portNumber, &hints, &servinfo)) != 0) {
+            fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+            return 1;
+        }
 
 	// loop through all the results and make a socket
 	for(p = servinfo; p != NULL; p = p->ai_next) {
@@ -57,11 +60,26 @@ int main(int argc, char *argv[])
 		perror("talker: sendto");
 		exit(1);
 	}
-
 	freeaddrinfo(servinfo);
 
 	printf("talker: sent %d bytes to %s\n", numbytes, argv[1]);
 	close(sockfd);
-
 	return 0;
+}
+
+int getIntParam(int loc, const char *argv[]){
+    char *p;
+    int num;
+    int retInt = 0;
+    long conver = strtol(argv[loc], &p, TENRADIX);
+    if (errno != 0 || *p != '\0' || conver > INT_MAX)
+        {
+            perror("talker usage: talker serverName portNumber\n");
+            exit(1);
+        }
+    else
+        {
+            retInt = conver;
+        }
+    return retInt;
 }
