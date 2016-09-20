@@ -13,6 +13,7 @@
 #include <sys/socket.h>
 #include <inttypes.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 //#define PORT "10025" // the port client will be connecting to 
 
@@ -113,6 +114,22 @@ void getTotalMessage(unsigned char * theBytes, request_t targetRequest){
     theBytes[7] = targetRequest.operandTwo.theBytes[1];
 }
 
+response_t remakeResponse(unsigned char * theBytes){
+    response_t returnResponse;
+    returnResponse.TML = theBytes[0];
+    returnResponse.requestID = theBytes[1];
+    returnResponse.errorCode = theBytes[2];
+    int32Store resultToStore;
+
+    resultToStore.theBytes[0] = theBytes[3];
+    resultToStore.theBytes[1] = theBytes[4];
+    resultToStore.theBytes[2] = theBytes[5];
+    resultToStore.theBytes[3] = theBytes[6];
+    resultToStore.theInt = get32FromBytes(resultToStore.theBytes);
+
+    returnResponse.result = resultToStore;
+    return returnResponse;
+}
 
 request_t getRequest(uint8_t reqNum) {
    uint16_t op1;
@@ -155,31 +172,16 @@ request_t getRequest(uint8_t reqNum) {
    cReq.operandTwo = op2Store;
    
    return cReq;
-   
-//    switch(input) {
-//    case ADDOP:
-// 
-//       break;
-//    case SUBOP:
-//
-//       break;
-//    case OROP:
-//
-//       break;
-//    case ANDOP:
-//
-//       break;
-//    case RSOP:
-//
-//       break;
-//    case LSOP:       
-//
-//       break;
-//    default:
-//       break;
-//   }
-
 }
+
+
+long timediff(clock_t t1, clock_t t2) {
+    long elapsed;
+    elapsed = ((double)t2 - t1) / CLOCKS_PER_SEC * 1000;
+    return elapsed;
+}
+
+   
 
 int main(int argc, char *argv[])
 {
@@ -192,6 +194,11 @@ int main(int argc, char *argv[])
 	char s[INET6_ADDRSTRLEN];
    int portNum;
    request_t req;
+   // Variables for clocks and calculating elapsed time.
+   clock_t t1, t2;
+   int i;
+   float x = 2.7182;
+   long elapsed;
 
  
 	if (argc != 3) {
@@ -241,31 +248,56 @@ int main(int argc, char *argv[])
 	freeaddrinfo(servinfo); // all done with this structure
    
    int iNum = 0;
-   
-   while(1) {
+   int cont = 1;
+   while(cont == 1) {
       uint8_t reqNum = iNum;
       req = getRequest(reqNum);
       
       getTotalMessage(sendBytes, req);
       
       
-       printf("The Bytes Client intends to send are: ");
-       int j;
-       for(j = 0; j < 8; j++){
+      printf("The Bytes Client intends to send are: ");
+      int j;
+      for(j = 0; j < 8; j++){
          printf(" %02x", sendBytes[j] & 0xff);
-       }
-       printf("\n");
+      }
+      printf("\n");
 
       send(sockfd,sendBytes,8,0);
+      //Start clock
+      t1 = clock();
+      for (i=0; i < 1000000; i++) {
+         x = x * 3.1415;
+      }
    
    	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
    	    perror("client: recv");
    	    exit(1);
    	}
+      t2 = clock();
+      elapsed = timediff(t1, t2);
    
-   	buf[numbytes] = '\0';
-   
-   	printf("client: received '%s'\n",buf);
+   	int messageLength = buf[0];
+      int totBytes;
+      for(totBytes = 0; totBytes < messageLength; totBytes++){
+            recBytes[totBytes] = buf[totBytes];
+      }
+      int k;
+      printf("\nThe Bytes Client received are: ");
+      for(k = 0; k < 8; k++){
+          printf(" %02x", recBytes[k] & 0xff);
+      }
+      printf("\n");
+        
+      response_t currentResponse = remakeResponse(recBytes);
+      printf("The server replied with the following requestID: %d\n", currentResponse.requestID);
+      printf("The server replied with the following result: %d\n", currentResponse.result.theInt);
+      t2 = clock();
+      printf("elapsed: %ld ms\n", elapsed);
+      
+      printf("Would you like to continue? (1 for yes, 0 for no): ");
+      scanf("%d" SCNd8, &cont);
+        
       iNum = iNum + 1;
    }
 	close(sockfd);

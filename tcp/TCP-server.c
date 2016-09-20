@@ -297,6 +297,7 @@ int main(int argc, char *argv[])
 		}
       }
 		close(new_fd);  // parent doesn't need this
+      
    }
 
 	return 0;
