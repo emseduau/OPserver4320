@@ -324,7 +324,7 @@ int clientRun(int argc, char *argv[]){
 
 
             response_t currentResponse = remakeResponse(recBytes);
-            printf("The server replied with the following result: %d\n", currentResponse.result.theInt);
+            printf("The server replied to request %d with the following result: %d\n", currentResponse.requestID,  currentResponse.result.theInt);
             printf("Would you like to continue? (1 for yes, 0 for no): ");
             scanf("%d" SCNd8, &keepGoing);
 	}
@@ -339,10 +339,10 @@ int main(int argc, char *argv[])
     unsigned char funnE[8];
     request_t myRequest = makeRequest(8, 7, 4, 2, 240, 4);
     getTotalMessage(funnE, myRequest);
-    printf("The Bytes Found as the message to send were: ");
+    //printf("The Bytes Found as the message to send were: ");
     int j;
     for(j = 0; j < 8; j++){
-        printf(" %02x", funnE[j] & 0xff);
+      //  printf(" %02x", funnE[j] & 0xff);
     }
     printf("\n");
     zalgo = clientRun(argc, argv);
