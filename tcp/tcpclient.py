@@ -33,7 +33,7 @@ def client():
     hostThing = sys.argv[1]
     #port = ECHO_PORT
     s = socket(AF_INET, SOCK_STREAM)
-    s.bind(('', port))
+    s.connect((hostThing, port))
     userContinue = 1
     requestID = 1
     print 'TCP CLIENT ready'
@@ -52,11 +52,13 @@ def client():
         opCode = eval(raw_input("OP Code: "))
         request = format_request(operandOne, operandTwo, opCode, requestID)
         requestTime = datetime.datetime.now()
-        s.sendto(request, (hostThing, port))
+        s.sendall(request)
         ourResponse = s.recv(7)
         responseTime = datetime.datetime.now()
         elapsedTime = responseTime - requestTime
-        print "The server responded to request %i with %i." % (unpack('!B', ourResponse[1])[0], unpack('!h', ourResponse[3:7])[0])
+        responseId = unpack('!B', ourResponse[1])[0]
+        responseValue = unpack('!i', ourResponse[3:7])[0]
+        print "The server responded to request %i with %i." % (responseId, responseValue)
         print "The total round-trip time was %i milliseconds." % int(elapsedTime.total_seconds() * 1000)
         userContinue = eval(raw_input("Would you like to continue? (1 for yes, 0 for no): "))
         requestID += 1
@@ -69,8 +71,8 @@ def format_request(operandOne, operandTwo, opCode, requestID):
     retBytes += struct.pack('!B', requestID)
     retBytes += struct.pack('!B', opCode)
     retBytes += struct.pack('!B', 2)
-    retBytes += struct.pack('!i', operandOne)
-    retBytes += struct.pack('!i', operandTwo)
+    retBytes += struct.pack('!h', operandOne)
+    retBytes += struct.pack('!h', operandTwo)
     return retBytes
 main()
 
