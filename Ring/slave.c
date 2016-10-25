@@ -69,8 +69,8 @@ void setHints(struct addrinfo *temp)
 
 void makeRequest(unsigned char * theBytes){
   theBytes[0] = groupID;
-  theBytes[1] = 0x12;
-  theBytes[2] = 0x34;
+  theBytes[1] = 0x12; // 18 in decimal.
+  theBytes[2] = 0x34; // 52 in decimal.
 }
 
 
