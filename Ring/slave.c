@@ -22,8 +22,8 @@ typedef struct int32Store
   int32_t theInt;
 } int32Store;
 
-uint8_t magicNum = 15;
-
+uint8_t groupID = 15;
+uint16_t magicNum = 0x1234;
 
 struct ring
 {
@@ -68,9 +68,9 @@ void setHints(struct addrinfo *temp)
 }
 
 void makeRequest(unsigned char * theBytes){
-  theBytes[0] = magicNum;
-  theBytes[1] = 12;
-  theBytes[2] = 34;
+  theBytes[0] = groupID;
+  theBytes[1] = 0x12;
+  theBytes[2] = 0x34;
 }
 
 
