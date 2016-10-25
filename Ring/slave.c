@@ -61,7 +61,7 @@ void makeRing(struct ring ringInfo, unsigned char * response)
 
 void setHints(struct addrinfo *temp)
 {
-  memset(&temp, 0, sizeof temp); // make sure the struct is empty
+  memset(temp, 0, sizeof temp); // make sure the struct is empty
   temp->ai_family = AF_UNSPEC;     // don't care IPv4 or IPv6
   temp->ai_socktype = SOCK_STREAM; // TCP stream sockets
   temp->ai_flags = AI_PASSIVE;     // fill in my IP for me
@@ -79,28 +79,25 @@ int main(int argc, char *argv[])
   int sockfd, result, bytes_sent;
   struct addrinfo hints;
   struct addrinfo *res;
-  unsigned char req;
+  unsigned char req[3];
   struct ring theRing;
   unsigned char response;
   
   setHints(&hints);
   result = getaddrinfo(argv[1], argv[2], &hints, &res);
-  sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-  connect(sockfd, res->ai_addr, res->ai_addrlen);
+  
+  
 
 
   
   while(1) {
+    sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    connect(sockfd, res->ai_addr, res->ai_addrlen);
     makeRequest(&req);
     send(sockfd, req, 3, 0);
-
     recv(sockfd, response, 8, 0);
-
     makeRing(theRing, &response);
-    
-    
-    
-    
+    close(sockfd);
   }
    
 }
