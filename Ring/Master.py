@@ -8,9 +8,10 @@
 import sys
 import struct
 import base64
+import fcntl
 from struct import *
 from socket import *
-
+groupID = 15
 ECHO_PORT = 10025
 BUFSIZE = 1024
 myRingID = 0
@@ -20,7 +21,11 @@ def main():
     if len(sys.argv) > 2:
         usage()
     else:
-        server()
+        #server()
+        host, aliaslist, lan_ip = socket.gethostbyname_ex(socket.gethostname())
+        print host
+        print aliaslist
+        print lan_ip[0]
 
 
 def usage():
@@ -48,10 +53,20 @@ def server():
         print "Got Connection From: " + str(addr)
         data = s.recv(3)
         print 'server received %r from %r' % (data, addr)
-        response = format_response(data)
-        s.sendto(response, addr)
+        if requestIsValid(data):
+            response = format_response(data)
+            s.sendall(response)
+        else:
+            pass
+        #response = format_response(data)
+        
     return
-
+def requestIsValid(recData):
+    if((recData[0] == groupID) and (recData[1] == 0x12) and (recData[2] == 0x34)):
+        return true
+    else:
+        return false
+    
 
 def format_response(inputData):
     retBytes = ''
