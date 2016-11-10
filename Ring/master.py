@@ -65,7 +65,7 @@ class Master:
         return
 
     def request_is_valid(self, extracted_id, extracted_magic):
-        return extracted_id == self.GROUP_ID and extracted_magic == self.MAGIC_VALUE
+        return extracted_magic == self.MAGIC_VALUE
 
     def get_raw_bytes(self, raw_data):
         hex_string = ""
