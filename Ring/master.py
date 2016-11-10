@@ -51,7 +51,7 @@ class Master:
             print "Master: Received these raw bytes:%s" % self.get_raw_bytes(data)
             extracted_id, extracted_magic = self.unpack_request(data)
 
-            if self.request_is_valid(extracted_id, extracted_magic):
+            if self.request_is_valid(extracted_magic):
                 print "Master: Decoded the values as: [groupID]: %i, [magicNum]: %i" % (extracted_id, extracted_magic)
                 response = self.pack_response()
                 self.nextSlaveRID += 1
@@ -64,7 +64,7 @@ class Master:
 
         return
 
-    def request_is_valid(self, extracted_id, extracted_magic):
+    def request_is_valid(self, extracted_magic):
         return extracted_magic == self.MAGIC_VALUE
 
     def get_raw_bytes(self, raw_data):
