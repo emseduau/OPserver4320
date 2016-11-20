@@ -176,7 +176,39 @@ void *prompt(void	*threadid)
 }
 }
 
+void forward(char *msg[])
 
+{
+ 
+            
+            
+            int fwdSock,fwdRes, fwdCheck;
+            struct addrinfo fwdhints, *fwdinfo;
+            
+            memset(&fwdhints, 0 , sizeof fwdhints);
+            fwdhints.ai_family = AF_UNSPEC;
+            fwdhints.ai_socktype = SOCK_DGRAM;
+            fwdhints.ai_flags = AI_PASSIVE;
+            
+            int fwdport = 10010 + (theRing.mastGID * 5) + theRing.rID - 1;
+            
+            char portfwd[5];
+            
+            sprintf(portfwd, "%d", fwdport);
+            
+            if((fwdCheck = getaddrinfo(theRing.nextSlave, portfwd, &fwdhints, &fwdinfo)) != 0) {
+               fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(fwdCheck));
+               return 1;
+            }
+            
+            fwdSock = socket(fwdinfo->ai_family, fwdinfo->ai_socktype, fwdinfo->ai_protocol);
+            printf("SOCKET: %d\n", fwdSock);
+            fwdCheck = sendto(fwdSock, msg,sizeof msg, 0, fwdinfo->ai_addr, fwdinfo->ai_addrlen);
+            printf("Sendto: %d\n", fwdCheck);
+            close(fwdSock);
+            
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -293,39 +325,9 @@ int sockfd, result, bytes_sent;
 		      printf("\nReceived Message: %s\n", theMessage);
 	       }
 	      else{
-            printf("FORWARDING PACKET...");
+            printf("\nFORWARDING PACKET...\n");
             
-                       
-            
-//             
-//             int fwdSock,fwdRes, fwdCheck;
-//             struct addrinfo fwdhints, *fwdinfo;
-//             
-//             memset(&fwdhints, 0 , sizeof fwdhints);
-//             fwdhints.ai_family = AF_UNSPEC;
-//             fwdhints.ai_socktype = SOCK_DGRAM;
-//             fwdhints.ai_flags = AI_PASSIVE;
-//             
-//             int fwdport = 10010 + (theRing.mastGID * 5) + theRing.rID - 1;
-//             
-//             char portfwd[5];
-//             
-//             sprintf(portfwd, "%d", fwdport);
-//             
-//             if((fwdCheck = getaddrinfo(theRing.nextSlave, portfwd, &fwdhints, &fwdinfo)) != 0) {
-//                fprintf(stderr, "getaddrinfo2: %s\n", gai_strerror(rslt));
-//                return 1;
-//             }
-//             
-//             fwdSock = socket(fwdinfo->ai_family, fwdinfo->ai_socktype, fwdinfo->ai_protocol);
-//             fwdCheck = sendto(fwdSock, recMsg, numbytes, 0, fwdinfo->ai_addr, fwdinfo->ai_addrlen);
-//             close(fwdSock);
-//             
-
-            
-            
-            
-            
+            forward(recMsg);
 
 
 
