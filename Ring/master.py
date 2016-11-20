@@ -19,7 +19,7 @@ class Master:
         self.BUFF_SIZE = 71
         self.MAGIC_VALUE = 0x1234
         self.myRingID = 0
-        self.nextSlaveRID = 0
+        self.nextSlaveRID = 1
         self.nextSlaveIP = 0
         self.sendTicket = 0
         self.udp_listen = 0
