@@ -110,7 +110,7 @@ class Master:
         print "This node just received the message: %s!" % (data[6: (len(data) - 1)])
 
     def calculate_my_port(self):
-        return 10010 + self.MASTER_ID * 5 + self.myRingID
+        return 10010 + self.MASTER_ID * 5 + self.myRingID - 1
 
     def calculate_target_port(self):
         return 10010 + self.MASTER_ID * 5 + self.nextSlaveRID
