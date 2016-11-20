@@ -31,7 +31,7 @@ struct ring
   uint8_t mastGID;
   int16Store magic;
   uint8_t rID;
-  char nextSlave[8];
+  unsigned char nextSlave[8];
   
 }__attribute__((__packed__));
 
@@ -146,7 +146,7 @@ void *prompt(void	*threadid)
       {
          packBytes[6 + x] = message[x];
       }
-      puts(message);
+
       packBytes[packLength - 1] = 0;
       packBytes[packLength - 1] = checksum(packBytes, packLength);  
 ///////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ void *prompt(void	*threadid)
 		return 1;
 	   }
       sockudp = socket(udpres->ai_family,udpres->ai_socktype, udpres->ai_protocol);
-      rslt = sendto(sockudp, packBytes, end, 0, udpres->ai_addr, udpres->ai_addrlen);
+      rslt = sendto(sockudp, packBytes, packLength, 0, udpres->ai_addr, udpres->ai_addrlen);
       
       
       close(sockudp);
@@ -272,36 +272,47 @@ int sockfd, result, bytes_sent;
 	   {
 	     recMsg[p] = buf[p];
 	   }
-      
-   //  printf("Checksum Check: %d\n", checksum(recMsg,numbytes));
-// 	 //CHECK CHECKSUM OF RECEIVED MESSAGE
-// 	 if(checksum(recMsg, numbytes) == 0)
-// 	   {
-// 	     //CHECK IF RING ID IS THIS SLAVE
-//         printf("For Ring ID: %d\n", recMsg[4]);
-//         printf("Have Ring ID: %d\n", theRing.rID);
-// 	     if(recMsg[4] == theRing.rID)
-// 	       {
-// 		 unsigned char theMessage[numbytes - 6];
-// 		 for(p = 0; p < (numbytes - 7); p++)
-// 		   {
-// 		     theMessage[p] = recMsg[p+6];
-// 		   }
-// 		 theMessage[numbytes - 7] = '\0';
-// 		 printf("\nReceived Message: %s\n", theMessage);
-// 	       }
-// 	     else if(recMsg[3] > 1)
-// 	       {
-// 		 //FORWARD TO NEXT SLAVE
-// 	       }
-// 	     else {
-// 	       printf("Time to Live 1 too low");
-// 	     }
-// 	 
-// 	   }
-// 	 else {
-// 	   printf("Checksum indicates corrupted data");
-// 	 }
+      printf("\nNumBytes: %d\n", numbytes);
+      printf("1: %d\n", recMsg[0]);
+      printf("2: %x\n", recMsg[1]);
+      printf("3: %x\n", recMsg[2]);
+      printf("4: %d\n", recMsg[3]);
+      printf("5: %d\n", recMsg[4]);
+      printf("6: %d\n", recMsg[5]);
+      for(p = 0; p<(numbytes-7); p++)
+      {
+         printf("MSG: %C\n", recMsg[6+p]);
+      }
+      printf("checksum: %d\n", recMsg[numbytes - 1]);
+     printf("Checksum Check: %d\n", checksum(recMsg,numbytes));
+	 //CHECK CHECKSUM OF RECEIVED MESSAGE
+	 if(checksum(recMsg, numbytes) == 0)
+	   {
+	     //CHECK IF RING ID IS THIS SLAVE
+        printf("For Ring ID: %d\n", recMsg[4]);
+        printf("Have Ring ID: %d\n", theRing.rID);
+	     if(recMsg[4] == theRing.rID)
+	       {
+		 unsigned char theMessage[numbytes - 6];
+		 for(p = 0; p < (numbytes - 7); p++)
+		   {
+		     theMessage[p] = recMsg[p+6];
+		   }
+		 theMessage[numbytes - 7] = '\0';
+		 printf("\nReceived Message: %s\n", theMessage);
+	       }
+	     else if(recMsg[3] > 1)
+	       {
+		 //FORWARD TO NEXT SLAVE
+	       }
+	     else {
+	       printf("Time to Live 1 too low");
+	     }
+	 
+	   }
+	 else {
+	   printf("Checksum indicates corrupted data");
+	 }
       
 	}
   
