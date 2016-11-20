@@ -25,6 +25,7 @@ typedef struct int32Store
 
 uint8_t groupID = 15;
 uint16_t magicNum = 0x1234;
+char nextPort[5];
 struct ring theRing;
 struct ring
 {
@@ -97,7 +98,7 @@ void *prompt(void	*threadid)
   uint8_t ringID;
   uint8_t ttl = 10;
   unsigned char temp[64];
-  int	packLength = 7;
+  
   int	sockudp,	new_fd;
   socklen_t	addr_size;
   struct	addrinfo	udphints, *udpres;
@@ -105,7 +106,8 @@ void *prompt(void	*threadid)
   
   while(1)
 	 {
-		memset(temp,0,64); // fill	the memory space will NULL(so	we	can find	end)
+      int	packLength = 7;
+		memset(temp,NULL,64); // fill	the memory space will NULL(so	we	can find	end)
  
       
 		printf("\nWhat ring ID would you like to send a message? ");
@@ -114,7 +116,7 @@ void *prompt(void	*threadid)
 		scanf(" %[^\n]%*c",temp);
       
 		int end = 0;
-		while(temp[end] != 0) //find how	long message was but	finding first NULL
+		while(temp[end] != NULL) //find how	long message was but	finding first NULL
 	{
 	  end	= end	+ 1;
 	}
@@ -155,7 +157,7 @@ void *prompt(void	*threadid)
       
       
       int portnum = 10010 + (theRing.mastGID * 5) + theRing.rID - 1;
-      char nextPort[5];
+
       
       sprintf(nextPort,"%d", portnum);
       
@@ -265,50 +267,86 @@ int sockfd, result, bytes_sent;
 	 if ((numbytes = recvfrom(sockUDP, buf, 74,0,(struct sockaddr *)&their_addr, &addr_len)) == -1) {
          perror("server: recv");
          exit(1);
-	}
-	 unsigned char recMsg[numbytes];
-	 int p;
-	 for(p = 0; p < numbytes; p++)
+	 }
+    
+
+      unsigned char recMsg[numbytes];
+   	int p;
+   	for(p = 0; p < numbytes; p++)
 	   {
 	     recMsg[p] = buf[p];
 	   }
-      printf("\nNumBytes: %d\n", numbytes);
-      printf("1: %d\n", recMsg[0]);
-      printf("2: %x\n", recMsg[1]);
-      printf("3: %x\n", recMsg[2]);
-      printf("4: %d\n", recMsg[3]);
-      printf("5: %d\n", recMsg[4]);
-      printf("6: %d\n", recMsg[5]);
-      for(p = 0; p<(numbytes-7); p++)
-      {
-         printf("MSG: %C\n", recMsg[6+p]);
-      }
-      printf("checksum: %d\n", recMsg[numbytes - 1]);
-     printf("Checksum Check: %d\n", checksum(recMsg,numbytes));
+//       printf("\nNumBytes: %d\n", numbytes);
+//       printf("1: %d\n", recMsg[0]);
+//       printf("2: %x\n", recMsg[1]);
+//       printf("3: %x\n", recMsg[2]);
+//       printf("4: %d\n", recMsg[3]);
+//       printf("5: %d\n", recMsg[4]);
+//       printf("6: %d\n", recMsg[5]);
+//       for(p = 0; p<(numbytes-7); p++)
+//       {
+//          printf("MSG: %C\n", recMsg[6+p]);
+//       }
 	 //CHECK CHECKSUM OF RECEIVED MESSAGE
 	 if(checksum(recMsg, numbytes) == 0)
 	   {
 	     //CHECK IF RING ID IS THIS SLAVE
-        printf("For Ring ID: %d\n", recMsg[4]);
-        printf("Have Ring ID: %d\n", theRing.rID);
+//         printf("For Ring ID: %d\n", recMsg[4]);
+//         printf("Have Ring ID: %d\n", theRing.rID);
 	     if(recMsg[4] == theRing.rID)
 	       {
-		 unsigned char theMessage[numbytes - 6];
-		 for(p = 0; p < (numbytes - 7); p++)
-		   {
-		     theMessage[p] = recMsg[p+6];
-		   }
-		 theMessage[numbytes - 7] = '\0';
-		 printf("\nReceived Message: %s\n", theMessage);
+		      unsigned char theMessage[numbytes - 6];
+		      for(p = 0; p < (numbytes - 7); p++)
+		      {
+		         theMessage[p] = recMsg[p+6];
+		      }
+		      theMessage[numbytes - 7] = '\0';
+		      printf("\nReceived Message: %s\n", theMessage);
 	       }
-	     else if(recMsg[3] > 1)
-	       {
-		 //FORWARD TO NEXT SLAVE
+	      else{
+            printf("FORWARDING PACKET...");
+            
+            
+            
+            
+            int fwdSock,fwdRes, fwdCheck;
+            struct addrinfo fwdhints, *fwdinfo;
+            
+            memset(&fwdhints, 0 , sizeof fwdhints);
+            fwdhints.ai_family = AF_UNSPEC;
+            fwdhints.ai_socktype = SOCK_DGRAM;
+            fwdhints.ai_flags = AI_PASSIVE;
+            
+            int fwdport = 10010 + (theRing.mastGID * 5) + theRing.rID - 1;
+            
+            char portfwd[5];
+            
+            sprintf(portfwd, "%d", fwdport);
+            
+            if((fwdCheck = getaddrinfo(theRing.nextSlave, portfwd, &fwdhints, &fwdinfo)) != 0) {
+               fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rslt));
+               return 1;
+            }
+            
+            fwdSock = socket(fwdinfo->ai_family, fwdinfo->ai_socktype, fwdinfo->ai_protocol);
+            fwdCheck = sendto(fwdSock, recMsg, numbytes, 0, fwdinfo->ai_addr, fwdinfo->ai_addrlen);
+            close(fwdSock);
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+
+
+
 	       }
-	     else {
-	       printf("Time to Live 1 too low");
-	     }
-	 
 	   }
 	 else {
 	   printf("Checksum indicates corrupted data");
