@@ -110,10 +110,10 @@ class Master:
         print "This node just received the message: %s!" % (data[6: (len(data) - 1)])
 
     def calculate_my_port(self):
-        return 10010 + self.MASTER_ID * 5 + self.myRingID - 1
+        return 10010 + self.MASTER_ID * 5 + self.myRingID
 
     def calculate_target_port(self):
-        return 10010 + self.MASTER_ID * 5 + self.nextSlaveRID
+        return 10010 + self.MASTER_ID * 5 + self.nextSlaveRID - 1
 
     def accept_joins(self, s):
         while True:
