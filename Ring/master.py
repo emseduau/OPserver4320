@@ -7,20 +7,22 @@
 
 import sys
 import struct
-#import fcntl
+import threading
+# import fcntl
 from struct import *
 from socket import *
 
 
 class Master:
     def __init__(self):
-        self.GROUP_ID = 15
-        self.BUFF_SIZE = 20
+        self.MASTER_ID = 15
+        self.BUFF_SIZE = 71
         self.MAGIC_VALUE = 0x1234
         self.myRingID = 0
-        self.nextSlaveRID = 1
+        self.nextSlaveRID = 0
         self.nextSlaveIP = 0
-
+        self.sendTicket = 0
+        self.udp_listen = 0
 
     def main(self):
         if len(sys.argv) > 2:
@@ -33,15 +35,87 @@ class Master:
         print 'Usage: master [port]'
         sys.exit(2)
 
-    def server(self):
-        port = eval(sys.argv[1])
-        host, alias_list, lan_ip = gethostbyname_ex(gethostname())
-        self.nextSlaveIP = lan_ip[0]
-        print "Master: Initialized with IP address of {} and port {}.".format(self.nextSlaveIP, port)
-        s = socket(AF_INET, SOCK_STREAM)
-        s.bind(('', port))
-        print "Master: Ready."
+    def calculate_checksum(self, ret_bytes):
+        running_total = 0
+        for little_byte in ret_bytes:
+            #print running_total
+            running_total += struct.unpack('!B', little_byte[0])[0]
+            #print running_total
+            while running_total >= 256:
+                #print "Its happening."
+                running_total = (running_total & 255) + (running_total >> 8)
 
+        print "{0:b}".format(running_total)
+        return running_total ^ 0xFF
+
+    def raw_sum(self, ret_bytes):
+        running_total = 0
+        for little_byte in ret_bytes:
+            #print running_total
+            running_total += struct.unpack('!B', little_byte[0])[0]
+            #print running_total
+            while running_total >= 256:
+                #print "Its happening."
+                running_total = (running_total & 255) + (running_total >> 8)
+        return running_total
+
+
+
+
+
+    def form_datagram(self, target_RID, user_message):
+        formedDatagram = ''
+        formedDatagram += struct.pack('!B', self.MASTER_ID)
+        formedDatagram += struct.pack('!H', 0x1234)
+        formedDatagram += struct.pack('!B', 255)
+        formedDatagram += struct.pack('!B', target_RID)
+        formedDatagram += struct.pack('!B', self.myRingID)
+        for little_byte in map(ord, user_message):
+            formedDatagram += struct.pack('!B', little_byte)
+        # formedDatagram += userMessage
+        formedDatagram += struct.pack('!B', self.calculate_checksum(formedDatagram))
+        return formedDatagram
+
+    def send_message_prompt(self):
+        while True:
+            targetRID = eval(raw_input("Please input the ring ID of the recipient: "))
+            userMessage = raw_input("Please input the message you want to send: ")
+            formedDatagram = self.form_datagram(targetRID, userMessage)
+            self.sendTicket.sendto(formedDatagram,  (self.nextSlaveIP, self.calculate_target_port()))
+
+    def verify_checksum(self, data):
+        return self.raw_sum(data) == 0xFF
+
+    def i_am_recipient(self, data):
+        return struct.unpack('!B', data[4])[0] == self.myRingID
+
+    def recv_handle_message(self):
+        while True:
+            data, users_msg = self.sendTicket.recvfrom(self.BUFF_SIZE)
+            if self.verify_checksum(data):
+                if self.i_am_recipient(data):
+                    self.recv_print_message(data)
+                    print "HAX"
+                else:
+                    self.recv_forward_message(data)
+                    print "forWard"
+            else:
+                print "BIG ERROR FOUND!"
+
+    def recv_forward_message(self, data):
+        self.sendTicket.sendto(data, (self.nextSlaveIP, self.calculate_target_port()))
+
+    def recv_print_message(self, data):
+        print "haahhaha len %s " % (len(data))
+        print "This node just received the message: %s!" % (data[6: (len(data) - 1)])
+
+    def calculate_my_port(self):
+        return 10010 + self.MASTER_ID * 5 + self.myRingID
+
+    def calculate_target_port(self):
+        return 10010 + self.MASTER_ID * 5 + self.nextSlaveRID
+
+    def accept_joins(self, s):
         while True:
             s.listen(1)
             print 'Master: Waiting for a new request.'
@@ -64,6 +138,30 @@ class Master:
 
         return
 
+    def server(self):
+        port = eval(sys.argv[1])
+        host, alias_list, lan_ip = gethostbyname_ex(gethostname())
+        self.nextSlaveIP = lan_ip[0]
+        print "Master: Initialized with IP address of {} and port {}.".format(self.nextSlaveIP, port)
+        s = socket(AF_INET, SOCK_STREAM)
+        s.bind(('', port))
+        print "Master: Ready."
+        self.udp_listen = self.calculate_my_port()
+        self.sendTicket = socket(AF_INET, SOCK_DGRAM)
+        self.sendTicket.bind(('', self.udp_listen))
+        accept_thread = threading.Thread(target=self.accept_joins, args=(s,))
+        send_thread = threading.Thread(target=self.send_message_prompt)
+        recv_thread = threading.Thread(target=self.recv_handle_message)
+        #self.accept_joins(s)#####################################
+        #self.send_message_prompt()###############################
+        #self.recv_handle_message()###############################
+        accept_thread.start()
+        recv_thread.start()
+        send_thread.start()
+        send_thread.join()
+        recv_thread.join()
+        accept_thread.join()
+
     def request_is_valid(self, extracted_magic):
         return extracted_magic == self.MAGIC_VALUE
 
@@ -80,7 +178,7 @@ class Master:
 
     def pack_response(self):
         ret_bytes = ''
-        ret_bytes += struct.pack('!B', self.GROUP_ID)
+        ret_bytes += struct.pack('!B', self.MASTER_ID)
         ret_bytes += struct.pack('!H', 0x1234)
         ret_bytes += struct.pack('!B', self.nextSlaveRID)
         ret_bytes += inet_aton(self.nextSlaveIP)
@@ -88,3 +186,7 @@ class Master:
 
 mainObject = Master()
 mainObject.main()
+#calcString = ''
+#calcString += struct.pack('!B', 1)
+#calcString += struct.pack('!B', 255)
+#print mainObject.calculate_checksum(calcString)
