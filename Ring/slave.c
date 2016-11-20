@@ -155,57 +155,101 @@ void *prompt(void	*threadid)
 ///////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
       
+      forward(packBytes, packLength);
+//       
+//       int portnum = 10010 + (theRing.mastGID * 5) + theRing.rID - 1;
+// 
+//       
+//       sprintf(nextPort,"%d", portnum);
+//       
+//       fprintf("Dest ID: %d\n", packBytes[4]);
+//       if((rslt = getaddrinfo(theRing.nextSlave, nextPort, &udphints, &udpres)) != 0)
+//       {
+//       fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rslt));
+// 		return 1;
+// 	   }
+//       sockudp = socket(udpres->ai_family,udpres->ai_socktype, udpres->ai_protocol);
+//       rslt = sendto(sockudp, packBytes, packLength, 0, udpres->ai_addr, udpres->ai_addrlen);
+//       
+//       
+//       close(sockudp);
       
+}
+}
+
+void forward(char *temp, int size)
+
+{
+  char packBytes[size];
+  int f;
+  for(f = 0; f < size; f++) 
+  {
+   packBytes[f] = temp[f];
+  }
+ 
+ 
+  int rslt;
+  
+  int	sockudp,	new_fd;
+  socklen_t	addr_size;
+  struct	addrinfo	udphints, *udpres;
+  struct	sockaddr_storage their_addr;
+           
+         
+      memset(&udphints, 0, sizeof udphints);
+      udphints.ai_family = AF_UNSPEC;
+      udphints.ai_socktype = SOCK_DGRAM;
+      udphints.ai_flags = AI_PASSIVE; 
+      
+            
       int portnum = 10010 + (theRing.mastGID * 5) + theRing.rID - 1;
 
       
       sprintf(nextPort,"%d", portnum);
       
       fprintf("Dest ID: %d\n", packBytes[4]);
+      
       if((rslt = getaddrinfo(theRing.nextSlave, nextPort, &udphints, &udpres)) != 0)
       {
       fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rslt));
 		return 1;
 	   }
       sockudp = socket(udpres->ai_family,udpres->ai_socktype, udpres->ai_protocol);
-      rslt = sendto(sockudp, packBytes, packLength, 0, udpres->ai_addr, udpres->ai_addrlen);
       
+      rslt = sendto(sockudp, packBytes, size, 0, udpres->ai_addr, udpres->ai_addrlen);
+      printf("SOCKET: %d\n", sockudp);
+      printf("Sendto: %d\n", rslt);
       
       close(sockudp);
-      
-}
-}
 
-void forward(char *msg[])
-
-{
- 
+         
+         
             
             
-            int fwdSock,fwdRes, fwdCheck;
-            struct addrinfo fwdhints, *fwdinfo;
-            
-            memset(&fwdhints, 0 , sizeof fwdhints);
-            fwdhints.ai_family = AF_UNSPEC;
-            fwdhints.ai_socktype = SOCK_DGRAM;
-            fwdhints.ai_flags = AI_PASSIVE;
-            
-            int fwdport = 10010 + (theRing.mastGID * 5) + theRing.rID - 1;
-            
-            char portfwd[5];
-            
-            sprintf(portfwd, "%d", fwdport);
-            
-            if((fwdCheck = getaddrinfo(theRing.nextSlave, portfwd, &fwdhints, &fwdinfo)) != 0) {
-               fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(fwdCheck));
-               return 1;
-            }
-            
-            fwdSock = socket(fwdinfo->ai_family, fwdinfo->ai_socktype, fwdinfo->ai_protocol);
-            printf("SOCKET: %d\n", fwdSock);
-            fwdCheck = sendto(fwdSock, msg,sizeof msg, 0, fwdinfo->ai_addr, fwdinfo->ai_addrlen);
-            printf("Sendto: %d\n", fwdCheck);
-            close(fwdSock);
+//             int fwdSock,fwdRes, fwdCheck;
+//             struct addrinfo fwdhints, *fwdinfo;
+//             
+//             memset(&fwdhints, 0 , sizeof fwdhints);
+//             fwdhints.ai_family = AF_UNSPEC;
+//             fwdhints.ai_socktype = SOCK_DGRAM;
+//             fwdhints.ai_flags = AI_PASSIVE;
+//             
+//             int fwdport = 10010 + (theRing.mastGID * 5) + theRing.rID - 1;
+//             
+//             char portfwd[5];
+//             
+//             sprintf(portfwd, "%d", fwdport);
+//             
+//             if((fwdCheck = getaddrinfo(theRing.nextSlave, portfwd, &fwdhints, &fwdinfo)) != 0) {
+//                fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(fwdCheck));
+//                return 1;
+//             }
+//             
+//             fwdSock = socket(fwdinfo->ai_family, fwdinfo->ai_socktype, fwdinfo->ai_protocol);
+//             printf("SOCKET: %d\n", fwdSock);
+//             fwdCheck = sendto(fwdSock, msg,sizeof msg, 0, fwdinfo->ai_addr, fwdinfo->ai_addrlen);
+//             printf("Sendto: %d\n", fwdCheck);
+//             close(fwdSock);
             
 
 }
@@ -327,7 +371,7 @@ int sockfd, result, bytes_sent;
 	      else{
             printf("\nFORWARDING PACKET...\n");
             
-            forward(recMsg);
+            forward(recMsg, numbytes);
 
 
 
