@@ -276,23 +276,12 @@ int sockfd, result, bytes_sent;
 	   {
 	     recMsg[p] = buf[p];
 	   }
-//       printf("\nNumBytes: %d\n", numbytes);
-//       printf("1: %d\n", recMsg[0]);
-//       printf("2: %x\n", recMsg[1]);
-//       printf("3: %x\n", recMsg[2]);
-//       printf("4: %d\n", recMsg[3]);
-//       printf("5: %d\n", recMsg[4]);
-//       printf("6: %d\n", recMsg[5]);
-//       for(p = 0; p<(numbytes-7); p++)
-//       {
-//          printf("MSG: %C\n", recMsg[6+p]);
-//       }
+
 	 //CHECK CHECKSUM OF RECEIVED MESSAGE
 	 if(checksum(recMsg, numbytes) == 0)
 	   {
 	     //CHECK IF RING ID IS THIS SLAVE
-//         printf("For Ring ID: %d\n", recMsg[4]);
-//         printf("Have Ring ID: %d\n", theRing.rID);
+
 	     if(recMsg[4] == theRing.rID)
 	       {
 		      unsigned char theMessage[numbytes - 6];
@@ -306,39 +295,33 @@ int sockfd, result, bytes_sent;
 	      else{
             printf("FORWARDING PACKET...");
             
+                       
             
-            
-            
-            int fwdSock,fwdRes, fwdCheck;
-            struct addrinfo fwdhints, *fwdinfo;
-            
-            memset(&fwdhints, 0 , sizeof fwdhints);
-            fwdhints.ai_family = AF_UNSPEC;
-            fwdhints.ai_socktype = SOCK_DGRAM;
-            fwdhints.ai_flags = AI_PASSIVE;
-            
-            int fwdport = 10010 + (theRing.mastGID * 5) + theRing.rID - 1;
-            
-            char portfwd[5];
-            
-            sprintf(portfwd, "%d", fwdport);
-            
-            if((fwdCheck = getaddrinfo(theRing.nextSlave, portfwd, &fwdhints, &fwdinfo)) != 0) {
-               fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rslt));
-               return 1;
-            }
-            
-            fwdSock = socket(fwdinfo->ai_family, fwdinfo->ai_socktype, fwdinfo->ai_protocol);
-            fwdCheck = sendto(fwdSock, recMsg, numbytes, 0, fwdinfo->ai_addr, fwdinfo->ai_addrlen);
-            close(fwdSock);
-            
-            
-            
-            
-            
-            
-            
-            
+//             
+//             int fwdSock,fwdRes, fwdCheck;
+//             struct addrinfo fwdhints, *fwdinfo;
+//             
+//             memset(&fwdhints, 0 , sizeof fwdhints);
+//             fwdhints.ai_family = AF_UNSPEC;
+//             fwdhints.ai_socktype = SOCK_DGRAM;
+//             fwdhints.ai_flags = AI_PASSIVE;
+//             
+//             int fwdport = 10010 + (theRing.mastGID * 5) + theRing.rID - 1;
+//             
+//             char portfwd[5];
+//             
+//             sprintf(portfwd, "%d", fwdport);
+//             
+//             if((fwdCheck = getaddrinfo(theRing.nextSlave, portfwd, &fwdhints, &fwdinfo)) != 0) {
+//                fprintf(stderr, "getaddrinfo2: %s\n", gai_strerror(rslt));
+//                return 1;
+//             }
+//             
+//             fwdSock = socket(fwdinfo->ai_family, fwdinfo->ai_socktype, fwdinfo->ai_protocol);
+//             fwdCheck = sendto(fwdSock, recMsg, numbytes, 0, fwdinfo->ai_addr, fwdinfo->ai_addrlen);
+//             close(fwdSock);
+//             
+
             
             
             
