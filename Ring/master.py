@@ -95,18 +95,19 @@ class Master:
             if self.verify_checksum(data):
                 if self.i_am_recipient(data):
                     self.recv_print_message(data)
-                    print "HAX"
+                    #print "HAX"
                 else:
                     self.recv_forward_message(data)
-                    print "forWard"
+                    #print "forWard"
+                pass
             else:
-                print "BIG ERROR FOUND!"
+                print "Checksum was incorrect; message dropped."
 
     def recv_forward_message(self, data):
         self.sendTicket.sendto(data, (self.nextSlaveIP, self.calculate_target_port()))
 
     def recv_print_message(self, data):
-        print "haahhaha len %s " % (len(data))
+        #print "haahhaha len %s " % (len(data))
         print "This node just received the message: %s!" % (data[6: (len(data) - 1)])
 
     def calculate_my_port(self):
